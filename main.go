@@ -50,13 +50,17 @@ func main() {
 	buf := make([]byte, udpMaxPacketSize)
 	connmap := make(map[string]connPair)
 	mu := sync.Mutex{}
+readloop:
 	for {
 		n, local, err := listener.ReadFromUDP(buf)
 		check(err)
 		_, ok := connmap[local.String()]
 		if !ok {
 			outgoing, err := net.DialUDP("udp", nil, raddr)
-			check(err)
+			if err != nil {
+				log.Println("ERROR", err)
+				continue readloop
+			}
 			log.Println("Incoming connection from ", local.String())
 			log.Println("Outgoing connection from ", outgoing.LocalAddr(), "to", outgoing.RemoteAddr())
 			go func(laddr *net.UDPAddr, outgoing *net.UDPConn) {
