@@ -13,10 +13,11 @@ import (
 )
 
 var (
-	flagRemote = flag.String("remote", "localhost:1194", "Remote addr to connect to.")
-	flagLocal  = flag.String("local", ":11194", "Local addr to listen to.")
-	flagKey    = flag.String("key", "20121221", "Key to obfuscate the packet.")
-	flagServer = flag.Bool("server", false, "Server or client.")
+	flagRemote  = flag.String("remote", "localhost:1194", "Remote addr to connect to.")
+	flagLocal   = flag.String("local", ":11194", "Local addr to listen to.")
+	flagKey     = flag.String("key", "20121221", "Key to obfuscate the packet.")
+	flagServer  = flag.Bool("server", false, "Server or client.")
+	flagVerbose = flag.Bool("verbose", false, "Enable debug messages.")
 
 	obfuscator cipher.Block
 )
@@ -65,7 +66,9 @@ func main() {
 					if err != nil {
 						break
 					}
-					log.Println("Message from remote, writing to", laddr)
+					if *flagVerbose {
+						log.Println("Message from remote, writing to", laddr)
+					}
 					if *flagServer {
 						obfuscator.Encrypt(buf[:n], buf[:n])
 					} else {
@@ -86,7 +89,9 @@ func main() {
 			mu.Unlock()
 		}
 		outgoing := connmap[local.String()].OutgoingConn
-		log.Println("Forwarding packet to", outgoing.RemoteAddr())
+		if *flagVerbose {
+			log.Println("Forwarding packet to", outgoing.RemoteAddr())
+		}
 		if *flagServer {
 			obfuscator.Decrypt(buf[:n], buf[:n])
 		} else {
